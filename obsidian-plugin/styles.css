@@ -1,0 +1,112 @@
+/* obsidian-relay sidebar */
+
+.relay-view {
+	padding: 0 var(--size-4-2);
+}
+
+.relay-view .relay-header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin: var(--size-4-2) 0;
+}
+
+.relay-view .relay-count {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.relay-view .relay-empty {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: var(--size-4-4) 0;
+}
+
+.relay-view .relay-group {
+	margin-bottom: var(--size-4-3);
+}
+
+.relay-view .relay-group-title {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin: 0 0 var(--size-2-2) 0;
+}
+
+.relay-view .relay-note {
+	border-left: 2px solid var(--background-modifier-border);
+	padding: var(--size-2-2) var(--size-4-2);
+	margin-bottom: var(--size-2-3);
+}
+
+.relay-view .relay-note.is-ready {
+	border-left-color: var(--color-green);
+}
+
+.relay-view .relay-note.has-issues {
+	border-left-color: var(--color-red);
+}
+
+.relay-view .relay-note-title {
+	cursor: pointer;
+	font-weight: var(--font-medium);
+	word-break: break-word;
+}
+
+.relay-view .relay-note-title:hover {
+	color: var(--text-accent);
+	text-decoration: underline;
+}
+
+.relay-view .relay-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-2-2);
+	margin-top: var(--size-2-1);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.relay-view .relay-badge {
+	border-radius: var(--radius-s);
+	padding: 0 var(--size-2-2);
+	background: var(--background-modifier-hover);
+}
+
+.relay-view .relay-badge.status-ready {
+	background: rgba(var(--color-green-rgb), 0.18);
+	color: var(--color-green);
+}
+
+.relay-view .relay-badge.status-draft {
+	background: rgba(var(--color-yellow-rgb), 0.18);
+	color: var(--color-yellow);
+}
+
+.relay-view .relay-target {
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+	word-break: break-all;
+}
+
+.relay-view .relay-issues {
+	margin: var(--size-2-2) 0 0 0;
+	padding-left: var(--size-4-4);
+	font-size: var(--font-ui-smaller);
+	color: var(--color-red);
+}
+
+.relay-view .relay-actions {
+	display: flex;
+	gap: var(--size-2-2);
+	margin-top: var(--size-2-2);
+}
+
+.relay-view .relay-actions button {
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-2);
+	height: var(--size-4-6);
+}

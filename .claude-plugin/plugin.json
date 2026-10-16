@@ -1,0 +1,10 @@
+{
+  "name": "obsidian-relay",
+  "displayName": "Obsidian Relay",
+  "version": "0.1.0",
+  "description": "Two-vault Obsidian workflow where Claude is the only writer: capture notes into a flat staging vault on any machine, then merge them into a main vault by rule. Ships both vault templates and the capture / transfer skills.",
+  "author": { "name": "obsidian-relay contributors" },
+  "repository": "https://github.com/w6tr/Obsidian-Relay",
+  "license": "MIT",
+  "keywords": ["obsidian", "notes", "pkm", "vault", "inbox", "staging", "transfer"]
+}

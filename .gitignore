@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Obsidian per-machine state (templates ship only app.json / templates.json / core-plugins.json)
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/cache
+**/.obsidian/plugins/
+
+# Obsidian plugin build output
+obsidian-plugin/node_modules/
+obsidian-plugin/main.js
+obsidian-plugin/*.map
+
+# Never commit real vault content
+*.local.md
+scratch/

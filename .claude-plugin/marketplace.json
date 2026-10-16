@@ -1,0 +1,12 @@
+{
+  "name": "obsidian-relay",
+  "description": "Marketplace for the obsidian-relay plugin (single-plugin repo).",
+  "owner": { "name": "obsidian-relay contributors" },
+  "plugins": [
+    {
+      "name": "obsidian-relay",
+      "source": ".",
+      "description": "Two-vault Obsidian workflow with Claude as the only writer: staging-vault capture and rule-based transfer into a main vault."
+    }
+  ]
+}
