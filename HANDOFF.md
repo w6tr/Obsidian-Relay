@@ -1,6 +1,6 @@
 # HANDOFF — obsidian-relay
 
-**Last updated:** 2026-11-01 · **Status:** v0.2.0 — capture-folder redesign committed on branch `v0.2` (not pushed); plugin not built, full loop not yet run.
+**Last updated:** 2026-11-01 · **Status:** v0.2.0 — capture-folder redesign on `main` and GitHub; sidebar plugin compiles but has never been loaded; full loop not yet run.
 **Purpose:** anyone (or any Claude session, on any machine) can clone this repo and continue. Read this, then `README.md`, then whatever section you're working on. Keep this file current — it is the shared memory between sessions; chat history does not travel.
 
 > This is the **public** handoff. It contains nothing personal: no real vault paths, venture names, partner names or people. Private operational notes (where the live vaults are, real slugs) stay in the owner's own vault, never here.
@@ -19,16 +19,16 @@ Shipped as:
 
 | Part | Path | State |
 |---|---|---|
-| Plugin manifest + marketplace | `.claude-plugin/plugin.json`, `marketplace.json` | v0.2.0, descriptions rewritten. Install: `/plugin marketplace add w6tr/Obsidian-Relay` then `/plugin install obsidian-relay@obsidian-relay`. **Not yet tested from GitHub**; `claude plugin validate .` not re-run since v0.2. |
+| Plugin manifest + marketplace | `.claude-plugin/plugin.json`, `marketplace.json` | v0.2.0, descriptions rewritten. Install: `/plugin marketplace add w6tr/Obsidian-Relay` then `/plugin install obsidian-relay@obsidian-relay`. `claude plugin validate .` passes (2026-11-01; one warning: no listing icon). **Not yet tested from GitHub.** |
 | `capture` skill | `skills/capture/SKILL.md` | **Rewritten for v0.2** (2026-11-01): verbatim `## Words`, 3+1 keys, `YYYY-MM-DD_HHMM_slug.md`, rebuilds `INDEX.md`. Never run. |
 | `transfer-inbox` skill | `skills/transfer-inbox/SKILL.md` | **Rewritten for v0.2**: §0 hands off to a vault's own pass skill; reads `raw/captures/INDEX.md`; ledger `.claude/filed-captures.md`; decision dated by `captured_at`; a lean is not a decision; follows the main vault's `CLAUDE.md`. The same procedure, as a vault's own `inbox-pass` skill, passed a scratch-copy walk test against a real main vault; that test found the log line for an older capture landing above newer lines, so step 3 now inserts by date. The generic skill itself has never run. |
 | `setup-vault` skill | `skills/setup-vault/SKILL.md` | **Rewritten for v0.2**: `main` / `capture` modes, fresh install or graft, §8 optional sidebar, §9 Syncthing one-way. Fresh-install branch untested; `${CLAUDE_PLUGIN_ROOT}` still unverified when installed. |
 | Capture folder template | `templates/capture-folder/` | New in v0.2: `CLAUDE.md`, `INDEX.md`, `Templates/Capture.md`, `attachments/`. Replaces `templates/staging-vault/`. |
 | Main vault template | `templates/main-vault/` | **Rewritten for v0.2**: no YAML, no `Tags.md`, inline `**Status:**`, a `raw/` folder row. Never applied by copy. |
-| Obsidian plugin | `obsidian-plugin/` | **Source rewritten for v0.2**: flat list newest first, 3+1 key validation, Mark ready / Back to draft, Rebuild INDEX.md, Validate, `autoRebuildIndex` setting. **Not built and never loaded** — `node_modules` is absent on the machine that wrote it, so `npm run build` has not run against this source. `main.js` is git-ignored. |
+| Obsidian plugin | `obsidian-plugin/` | **Source rewritten for v0.2**: flat list newest first, 3+1 key validation, Mark ready / Back to draft, Rebuild INDEX.md, Validate, `autoRebuildIndex` setting. `npm run build` passes with no type errors (2026-11-01, Node 24). **Never loaded in Obsidian.** `main.js` is git-ignored. |
 | README | `README.md` | Rewritten for v0.2. Needs a screenshot once a capture folder exists. |
 | Design doc | `docs/design.md` | Rewritten for v0.2. The pipe is answered: Syncthing, one way. |
-| GitHub repo | https://github.com/w6tr/Obsidian-Relay | `main` holds v0.1. **v0.2 is committed on local branch `v0.2` — not pushed, not merged.** |
+| GitHub repo | https://github.com/w6tr/Obsidian-Relay | v0.2 is on `main` and pushed. Not yet tagged or released. |
 
 ## 3. Continuing on a new machine
 
@@ -45,7 +45,7 @@ Shipped as:
 ## 4. Next actions, in order
 
 1. [x] ~~Apply the main-vault template to the real main vault.~~ Done 2026-10-16, by graft, not copy.
-2. [ ] **Build the plugin and commit v0.2.** `npm install && npm run build` in `obsidian-plugin/`; fix whatever tsc reports; run the scrub grep (§5); commit; `claude plugin validate .`.
+2. [x] ~~Build the plugin and commit v0.2.~~ Done 2026-11-01: build clean, validate passed, pushed to `main`.
 3. [ ] **Choose the capture machine and connect it** (`setup-vault` §9). The pipe is decided — Syncthing, Send Only → Receive Only into `raw/captures/` — but **the capture machine is not yet chosen**.
 4. [ ] **First real loop, by hand:** capture two notes (one decision, one "leaning toward"), mark both ready, let Syncthing land them, run the pass. Check: the lean is not logged as a decision, the decision is dated by its `captured_at`, the ledger gets a line, `raw/` is unchanged.
 5. [ ] **Load the Obsidian plugin** in the capture folder; check: sidebar renders newest first, validation flags a bad key / status / date / filename, Mark ready and Back to draft flip `status` and rebuild `INDEX.md`, and *Rebuild INDEX.md* produces exactly the `capture` skill's line format (`- <file>.md · <status> · <captured_at>`).
@@ -66,7 +66,7 @@ Shipped as:
 
 ## 6. Known gaps / doubts
 
-- **The plugin source has never compiled.** It was rewritten without `node_modules`; expect small type errors on the first build.
+- **The plugin compiles but has never run inside Obsidian.** Type-checking says nothing about how the sidebar renders.
 - **Syncthing on a cloud-synced main vault.** If the main vault sits in a cloud-sync folder, two sync tools then touch `raw/captures/`. Mark it "always keep on this device" (`setup-vault` §7). Untested.
 - `capture` tells Claude to expand the template's date and title itself because Obsidian's Templates plugin only expands them on manual insert. Correct, but easy to forget — watch for literal `{{title}}` in captures.
 - A main vault in a cloud-sync folder has two failure modes the skills mention but have never met: an un-hydrated note reads as empty (hydrate it, never rewrite it), and a sync conflict creates `Name (1).md` that Obsidian shows as a real note.
