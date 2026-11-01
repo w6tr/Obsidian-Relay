@@ -22,7 +22,7 @@ Never decide this from the user's description. `ls -A` the folder and look.
 
 ## 3. Fresh install (empty folder)
 Copy the whole template directory **including** `.obsidian/` and the empty `.keep` files (they make Obsidian show the folders). Use a copy that preserves dotfiles, e.g. `cp -R "<template>/." "<target>/"` on Mac/Linux or `robocopy <template> <target> /E` on Windows. Then:
-- Capture: replace `laptop` in its `CLAUDE.md` (the `device` line) and in `Templates/Capture.md` with a short name for this machine (ask; default to the hostname). Then §9.
+- Capture: replace `laptop` in its `CLAUDE.md` (the `device` line) and in `Templates/Capture.md` with a short name for this machine (ask; default to the hostname). Check that `.stignore` arrived with the copy (§9 needs it). Then §9.
 - Main: nothing to personalise; the `Example Venture`, `Partner A` and `Prospects` pages are placeholders the user can rename or delete. If a capture machine will feed it, §9.
 
 Show the resulting tree. Then §5.
@@ -80,17 +80,32 @@ Plain steps, one at a time:
 1. **Both machines:** install Syncthing and add each machine as a device on
    the other (Actions → Show ID, then Add Remote Device). If they are not on
    the same network, put both on the same Tailscale (or similar) network first.
-2. **Capture machine:** Add Folder → path = the capture folder, Folder ID
+2. **Capture machine, before sharing:** make sure the capture folder's root
+   holds `.stignore` with these lines (a fresh install copies it from the
+   template; a grafted or older capture folder needs it written):
+   ```
+   /CLAUDE.md
+   /.claude
+   /Templates
+   /.obsidian
+   ```
+   Without it the capture folder's own rulebook lands in the main vault at
+   `raw/captures/CLAUDE.md`. There a Claude session reading the captures picks
+   up the capture machine's rules, and the file shares the main vault's
+   `CLAUDE` link name. Syncthing never sends ignored files, nor `.stignore`
+   itself (docs.syncthing.net, *Ignoring Files*).
+3. **Capture machine:** Add Folder → path = the capture folder, Folder ID
    `captures`. Under Advanced set **Folder Type: Send Only**. Under Sharing,
    tick the main-vault machine.
-3. **Main-vault machine:** open http://127.0.0.1:8384. Accept the offered
+4. **Main-vault machine:** open http://127.0.0.1:8384. Accept the offered
    `captures` folder with the path `<main vault>/raw/captures`, and under
    Advanced set **Folder Type: Receive Only**.
-4. **Cloud-synced main vault:** mark `raw/captures` "always keep on this
+5. **Cloud-synced main vault:** mark `raw/captures` "always keep on this
    device" (§7).
-5. **Check:** `raw/captures/INDEX.md` appears in the main vault within a
-   minute. Until it does, the transfer has nothing to read.
-6. **Main vault rules:** add one line to its `CLAUDE.md` saying `raw/` is
+6. **Check:** `raw/captures/INDEX.md` appears in the main vault within a
+   minute, and `raw/captures/CLAUDE.md` does not. Until INDEX.md arrives, the
+   transfer has nothing to read.
+7. **Main vault rules:** add one line to its `CLAUDE.md` saying `raw/` is
    written by machines only, read-only for Claude, and exempt from the
    unique-filename rule. On a fresh install the template already says so.
 

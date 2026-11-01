@@ -1,0 +1,7 @@
+// Syncthing ignore list for the capture folder (setup-vault §9).
+// Only captures travel to the main vault. This folder's own rules,
+// templates and Obsidian settings stay on the capture machine.
+/CLAUDE.md
+/.claude
+/Templates
+/.obsidian

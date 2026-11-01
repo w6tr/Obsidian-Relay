@@ -1,7 +1,7 @@
 {
   "name": "obsidian-relay",
   "displayName": "Obsidian Relay",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Capture on any machine, file in one Obsidian vault, with Claude as the only writer: a capture folder holds your words verbatim, a one-way sync carries it into the main vault's raw/ layer, and a pass skill files approved rows there. Ships both templates and the capture / transfer-inbox / setup-vault skills.",
   "author": { "name": "obsidian-relay contributors" },
   "repository": "https://github.com/w6tr/Obsidian-Relay",
