@@ -1,26 +1,20 @@
----
-type: reference
-venture: company
-status: active
-updated: {{date:YYYY-MM-DD}}
----
 # Home
 
-The main vault. Source of truth. Notes captured elsewhere arrive through a staging vault — see `CLAUDE.md` for the rules and the `transfer-inbox` skill for the procedure.
+**Status:** Active — the index of what is live
+
+The main vault and source of truth. The rules are in `CLAUDE.md`; captures
+from another machine arrive in `raw/captures/` and are filed by
+`transfer-inbox`.
 
 ## Ventures
 *(one line per page in `Ventures/`, active first)*
-- [[Example Venture]] — active
+- [[Example Venture]] — Active
 
 ## Company
 - [[Decisions Log]]
-- [[Tags]]
 
 ## Partners
 - [[Partner A]]
 
 ## Pipeline
 - [[Prospects]]
-
-## Last transfer
-- never

@@ -1,11 +1,6 @@
----
-type: partner
-venture: 
-status: active
-updated: {{date:YYYY-MM-DD}}
-tags: []
----
 # {{title}}
+
+**Status:** Active — 
 
 > Who they are, what the relationship is, which venture(s) it serves.
 
@@ -19,4 +14,4 @@ tags: []
 - 
 
 ## Log
-*(newest first)*
+*(newest first, as `### YYYY-MM-DD — topic`)*

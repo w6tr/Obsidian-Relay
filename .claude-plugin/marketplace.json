@@ -6,7 +6,7 @@
     {
       "name": "obsidian-relay",
       "source": ".",
-      "description": "Two-vault Obsidian workflow with Claude as the only writer: staging-vault capture and rule-based transfer into a main vault."
+      "description": "Capture-anywhere Obsidian workflow with Claude as the only writer: verbatim captures, a one-way sync into the main vault's raw/ layer, and approved filing there."
     }
   ]
 }

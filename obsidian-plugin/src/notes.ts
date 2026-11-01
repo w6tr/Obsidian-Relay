@@ -1,18 +1,18 @@
 import { App, TFile, normalizePath } from "obsidian";
-import { REQUIRED_KEYS, STATUSES, type RelaySettings, type Status } from "./settings";
+import { ALLOWED_KEYS, NOT_CAPTURES, REQUIRED_KEYS, STATUSES, type RelaySettings, type Status } from "./settings";
 
-/** One Inbox note as the sidebar and Home.md see it. */
-export interface InboxNote {
+/** One capture as the sidebar and INDEX.md see it. */
+export interface CaptureNote {
 	file: TFile;
-	title: string;
-	type: string;
-	venture: string;
-	target: string;
+	captured_at: string;
 	status: Status | string;
-	created: string;
 	device: string;
+	hint: string;
 	issues: string[];
 }
+
+const FILENAME = /^\d{4}-\d{2}-\d{2}_\d{4}_[a-z0-9-]+$/;
+const CAPTURED_AT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
 const toText = (v: unknown): string => {
 	if (v === null || v === undefined) return "";
@@ -20,64 +20,61 @@ const toText = (v: unknown): string => {
 	return String(v).trim();
 };
 
-/** Files directly inside `folder` (no sub-folders), markdown only. */
-export function filesInFolder(app: App, folder: string): TFile[] {
-	const wanted = normalizePath(folder);
-	return app.vault.getMarkdownFiles().filter((f) => (f.parent?.path ?? "") === wanted);
+export function folderPath(settings: RelaySettings): string {
+	return settings.captureFolder ? normalizePath(settings.captureFolder) : "";
 }
 
-/** Read a note's routing properties from the metadata cache and validate them. */
-export function readInboxNote(app: App, file: TFile, settings: RelaySettings): InboxNote {
+export function indexPath(settings: RelaySettings): string {
+	const folder = folderPath(settings);
+	return normalizePath(folder ? `${folder}/${settings.indexFile}` : settings.indexFile);
+}
+
+/** True for a markdown file directly in the capture folder that is not the index or CLAUDE.md. */
+export function isCapturePath(path: string, settings: RelaySettings): boolean {
+	if (!path.endsWith(".md")) return false;
+	const slash = path.lastIndexOf("/");
+	const parent = slash === -1 ? "" : path.slice(0, slash);
+	const name = path.slice(slash + 1);
+	return parent === folderPath(settings) && name !== settings.indexFile && !NOT_CAPTURES.includes(name);
+}
+
+/** Read a capture's front matter from the metadata cache and validate it. */
+export function readCapture(app: App, file: TFile): CaptureNote {
 	const fm = (app.metadataCache.getFileCache(file)?.frontmatter ?? {}) as Record<string, unknown>;
-	const note: InboxNote = {
+	const note: CaptureNote = {
 		file,
-		title: file.basename,
-		type: toText(fm.type),
-		venture: toText(fm.venture),
-		target: toText(fm.target),
+		captured_at: toText(fm.captured_at),
 		status: toText(fm.status),
-		created: toText(fm.created),
 		device: toText(fm.device),
+		hint: toText(fm.hint),
 		issues: [],
 	};
 
 	for (const key of REQUIRED_KEYS) {
 		if (!toText(fm[key])) note.issues.push(`missing \`${key}\``);
 	}
-	if (note.type && !settings.allowedTypes.includes(note.type)) {
-		note.issues.push(`unknown type \`${note.type}\``);
+	for (const key of Object.keys(fm)) {
+		if (!(ALLOWED_KEYS as readonly string[]).includes(key)) note.issues.push(`unexpected key \`${key}\``);
 	}
 	if (note.status && !(STATUSES as readonly string[]).includes(note.status)) {
 		note.issues.push(`unknown status \`${note.status}\``);
 	}
-	if (note.target && !note.target.endsWith(".md")) {
-		note.issues.push("`target` should be a page path ending in .md");
+	if (note.captured_at && !CAPTURED_AT.test(note.captured_at)) {
+		note.issues.push("`captured_at` should be YYYY-MM-DDTHH:MM");
 	}
-	if (note.venture && note.venture !== note.venture.toLowerCase()) {
-		note.issues.push("`venture` slug should be lowercase");
-	}
-	if (!/^\d{4}-\d{2}-\d{2} /.test(file.basename)) {
-		note.issues.push("filename should start with YYYY-MM-DD");
+	if (!FILENAME.test(file.basename)) {
+		note.issues.push("filename should be YYYY-MM-DD_HHMM_slug");
 	}
 	return note;
 }
 
-export function readInbox(app: App, settings: RelaySettings): InboxNote[] {
-	return filesInFolder(app, settings.inboxFolder)
-		.map((f) => readInboxNote(app, f, settings))
-		.sort((a, b) => b.title.localeCompare(a.title)); // date-prefixed names → newest first
-}
-
-/** Group notes by venture slug, ventures alphabetical, notes newest first within each. */
-export function groupByVenture(notes: InboxNote[]): Map<string, InboxNote[]> {
-	const groups = new Map<string, InboxNote[]>();
-	for (const n of notes) {
-		const key = n.venture || "(no venture)";
-		const list = groups.get(key) ?? [];
-		list.push(n);
-		groups.set(key, list);
-	}
-	return new Map([...groups.entries()].sort(([a], [b]) => a.localeCompare(b)));
+/** Every capture in the folder, newest first by `captured_at`, then by filename. */
+export function readCaptures(app: App, settings: RelaySettings): CaptureNote[] {
+	return app.vault
+		.getMarkdownFiles()
+		.filter((f) => isCapturePath(f.path, settings))
+		.map((f) => readCapture(app, f))
+		.sort((a, b) => b.captured_at.localeCompare(a.captured_at) || b.file.name.localeCompare(a.file.name));
 }
 
 export async function setStatus(app: App, file: TFile, status: Status): Promise<void> {
@@ -86,69 +83,32 @@ export async function setStatus(app: App, file: TFile, status: Status): Promise<
 	});
 }
 
-async function ensureFolder(app: App, folder: string): Promise<void> {
-	const path = normalizePath(folder);
-	if (!app.vault.getAbstractFileByPath(path)) await app.vault.createFolder(path);
+/** The index list, in exactly the shape the `capture` skill writes. */
+export function renderIndex(notes: CaptureNote[]): string {
+	return notes.map((n) => `- ${n.file.name} · ${n.status || "?"} · ${n.captured_at || "?"}`).join("\n");
 }
 
-/** Mark a note transferred and move it to the Transferred folder (links are updated by Obsidian). */
-export async function markTransferred(app: App, file: TFile, settings: RelaySettings): Promise<void> {
-	await setStatus(app, file, "transferred");
-	await ensureFolder(app, settings.transferredFolder);
-	const dest = normalizePath(`${settings.transferredFolder}/${file.name}`);
-	if (app.vault.getAbstractFileByPath(dest)) {
-		throw new Error(`A note named "${file.name}" already exists in ${settings.transferredFolder}/`);
-	}
-	await app.fileManager.renameFile(file, dest);
-}
-
-/** Render the "Waiting for transfer" list in the same shape the capture skill writes. */
-export function renderWaitingList(notes: InboxNote[]): string {
-	if (notes.length === 0) return "- none yet";
-	const lines: string[] = [];
-	for (const [venture, list] of groupByVenture(notes)) {
-		lines.push(`### ${venture}`);
-		for (const n of list) {
-			const meta = [n.type || "?", n.status || "?"].join(" · ");
-			lines.push(`- [[${n.title}]] — ${meta}`);
-		}
-		lines.push("");
-	}
-	return lines.join("\n").trimEnd();
-}
-
-/**
- * Replace the body of `## <heading>` in the home note with the rendered list.
- * Lines beginning with `*(` directly under the heading are kept (the instruction line).
- */
-export function spliceWaitingList(content: string, heading: string, list: string): string {
+/** Keep everything above the first list line (the header), replace the list. */
+export function spliceIndex(content: string, list: string): string {
 	const lines = content.split("\n");
-	const start = lines.findIndex((l) => l.trim() === `## ${heading}`);
-	if (start === -1) {
-		return `${content.trimEnd()}\n\n## ${heading}\n\n${list}\n`;
-	}
-	let end = lines.length;
-	for (let i = start + 1; i < lines.length; i++) {
-		if (/^##\s/.test(lines[i]) || /^#\s/.test(lines[i])) {
-			end = i;
-			break;
-		}
-	}
-	const kept: string[] = [];
-	for (let i = start + 1; i < end; i++) {
-		const l = lines[i];
-		if (l.trim() === "" && kept.length === 0) continue;
-		if (l.trim().startsWith("*(")) kept.push(l);
-		else break;
-	}
-	const body = [...(kept.length ? ["", ...kept] : []), "", list, ""];
-	return [...lines.slice(0, start + 1), ...body, ...lines.slice(end)].join("\n");
+	const first = lines.findIndex((l) => l.startsWith("- "));
+	const header = (first === -1 ? lines : lines.slice(0, first)).join("\n").trimEnd();
+	return list ? `${header}\n\n${list}\n` : `${header}\n`;
 }
 
-export async function updateHome(app: App, settings: RelaySettings): Promise<boolean> {
-	const home = app.vault.getAbstractFileByPath(normalizePath(settings.homeFile));
-	if (!(home instanceof TFile)) return false;
-	const list = renderWaitingList(readInbox(app, settings));
-	await app.vault.process(home, (data) => spliceWaitingList(data, settings.homeHeading, list));
-	return true;
+const DEFAULT_HEADER =
+	"# INDEX\n\nEvery capture in this folder, newest first. Rebuilt from the files after every\nchange — never edited by hand.";
+
+/** Rewrite the index from the files; creates it if missing. Returns the capture count. */
+export async function rebuildIndex(app: App, settings: RelaySettings): Promise<number> {
+	const notes = readCaptures(app, settings);
+	const list = renderIndex(notes);
+	const path = indexPath(settings);
+	const existing = app.vault.getAbstractFileByPath(path);
+	if (existing instanceof TFile) {
+		await app.vault.process(existing, (data) => spliceIndex(data, list));
+	} else {
+		await app.vault.create(path, spliceIndex(DEFAULT_HEADER, list));
+	}
+	return notes.length;
 }

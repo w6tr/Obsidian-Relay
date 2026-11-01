@@ -22,19 +22,6 @@
 	padding: var(--size-4-4) 0;
 }
 
-.relay-view .relay-group {
-	margin-bottom: var(--size-4-3);
-}
-
-.relay-view .relay-group-title {
-	font-size: var(--font-ui-small);
-	font-weight: var(--font-semibold);
-	color: var(--text-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	margin: 0 0 var(--size-2-2) 0;
-}
-
 .relay-view .relay-note {
 	border-left: 2px solid var(--background-modifier-border);
 	padding: var(--size-2-2) var(--size-4-2);
@@ -85,11 +72,10 @@
 	color: var(--color-yellow);
 }
 
-.relay-view .relay-target {
-	font-family: var(--font-monospace);
+.relay-view .relay-hint {
 	font-size: var(--font-ui-smaller);
 	color: var(--text-faint);
-	word-break: break-all;
+	word-break: break-word;
 }
 
 .relay-view .relay-issues {

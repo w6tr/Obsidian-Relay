@@ -1,67 +1,91 @@
 # Main vault — rules for Claude
 
-This vault is the **source of truth**. Notes captured on other machines arrive via a staging vault and the `transfer-inbox` skill. Claude is the only writer: the user says what to record, Claude files it according to these rules.
+This vault is the **source of truth**. Claude is the only writer: the user says
+what to record, Claude files it by these rules. Words captured on another
+machine arrive as a read-only copy under `raw/captures/` and are filed by the
+`transfer-inbox` skill, one approved row at a time.
 
 ## Start and end of every session
-- **Start:** read `Home.md`. Check whether staging notes are available to transfer (attached as files, or the staging folder is connected). If so, offer to run `transfer-inbox`.
-- **End:** make sure every page you touched has an up-to-date `updated` property and is linked from its venture page. Update `Home.md` if anything changed.
+- **Start:** read `Home.md`. If `raw/captures/INDEX.md` lists `ready` captures
+  that are not in `.claude/filed-captures.md`, say how many and offer to run
+  `transfer-inbox`.
+- **End:** every page you touched is linked from its venture page, every
+  decision you recorded is in both places (below), and `Home.md` is current.
 
-## Folders are type/workflow only
-Topic organization is done with links, properties and tags — never with folders.
+## Folders are type only — never topic
+Topics are `[[links]]`, not folders.
 
 | Folder | Holds |
 |---|---|
-| `Ventures/` | One page per venture. The page **is** the venture's index (MOC). |
-| `Company/` | Legal entity, finances, `Decisions Log.md`. |
+| `Ventures/` | One page per venture. The page **is** the venture's index. |
+| `Company/` | The legal entity and `Decisions Log.md`. |
 | `Partners/` | One page per external partner or collaborator. |
 | `Pipeline/` | Working lists: `Prospects.md`, deal flow, inventory lots. |
-| `Templates/` | Page templates. |
-| `Archive/` | Anything with `status: done`. |
-| `Attachments/` | All images/files, flat. Same folder name as in the staging vault. |
+| `Templates/` | Page templates. A new page is a copy of one. |
+| `Archive/` | Pages that are finished or no longer maintained. |
+| `Attachments/` | All images and files, flat. |
+| `raw/` | Written by machines only — see below. |
 
-Rules: no topic folders; no sub-folders unless a folder exceeds ~50 pages; new top-level folders only when the user asks.
+No sub-folders unless a folder passes ~50 pages; no new top-level folder unless
+the user asks.
 
-## Every page has properties
-```yaml
-type: venture | company | partner | pipeline | reference
-venture: <slug>            # the venture this page belongs to, or `company`
-status: active | paused | done
-updated: YYYY-MM-DD
-tags: []                   # only values listed in Tags.md
+## Page state is inline
+Under each page's title, state is a bold field:
 ```
-These feed Obsidian **Bases** views (core plugin) — no Dataview needed. Refresh `updated` on every edit.
-
-## Tag vocabulary
-`Tags.md` is the only source of valid tags. Tags are nested: `#venture/<slug>`, `#status/waiting`, `#kind/decision`, … Claude may not invent a tag. To add one: append it to `Tags.md` with a one-line meaning first, then use it.
+**Status:** Active — waiting on the supplier quote
+```
+`Status` is `Active`, `Paused` or `Done`, then a dash and the reason. No YAML
+frontmatter and no tags by default. To opt in to properties or a tag
+vocabulary, the user says so and this section is rewritten first — never mix
+the two styles.
 
 ## The venture page is the index
-Nothing about a venture exists without a link from its page in `Ventures/`. That is the test for "filed": if the venture page doesn't link to it, it isn't filed yet. When creating any page, add a link to it from the relevant venture page in the same edit.
+Nothing about a venture exists without a link from its page in `Ventures/`.
+When creating any page, link it from its venture page in the same edit.
 
-## Decisions Log
-`Company/Decisions Log.md` is append-only, **newest first**, one line per decision:
-```
-- 2026-10-15 — [[Example Venture]]: chose weekly transfer over nightly — see [[2026-10-15 example-venture - transfer cadence]]
-```
-Never rewrite or delete an entry; add a new line to reverse a decision.
+## A decision is recorded in two places or it is not recorded
+1. One line in `Company/Decisions Log.md` — append-only, **in date order, newest on top** — a new line goes directly
+   above the first line dated on or before it, so a decision filed late slots in by its date:
+   ```
+   - 2026-10-15 — [[Example Venture]]: chose the second supplier — see [[Example Venture]]
+   ```
+2. One bullet under `## Decisions` on the venture page, same date.
+
+A decision closes an option ("we're going with", "decided", "we'll use").
+"Leaning toward", "probably" and "thinking about" are not decisions — they go
+under the page's open questions or next steps. Never edit or delete a log
+line; reverse a decision with a new one.
 
 ## Update in place
-Never create a second page for the same subject. Search by name and by `venture` property before creating. New material about an existing subject goes into the existing page as a dated section:
-```
-## 2026-10-15 — <topic>
-```
+Never a second page for a subject that has one, and never two notes with the
+same filename — links resolve by name. Search by filename before creating.
+New material goes into the existing page's own sections; a dated entry goes
+under `## Log` as `### YYYY-MM-DD — <topic>`, newest first.
+
+## Only what the user said
+Never infer a fact into the record — no guessed dates, names, numbers or
+intentions. An unknown is written as unknown.
 
 ## Archive, don't delete
-Set `status: done`, move the page to `Archive/`. Links keep working (Obsidian resolves by name). Never delete a page.
+Move the page to `Archive/` and set `**Status:** Done — <why it stopped>`.
+Links keep working. Move pages inside Obsidian, never on the filesystem.
 
 ## Links and attachments
 - `[[wikilinks]]` by note name, no folder paths.
-- Attachments in `Attachments/`, referenced as `![[filename.png]]`.
+- Attachments in `Attachments/`, embedded as `![[filename.png]]`.
 
-## Receiving transfers
-Follow the `transfer-inbox` skill exactly. In short: merge each `ready` staging note into its `target` page as a dated section; decisions also get a line in the Decisions Log; attachments move to `Attachments/`; the venture page gets a link; the staging note is marked `transferred`. Never copy `.obsidian/` from the staging vault.
+## raw/ — the machine layer
+- A machine that feeds this vault writes only to `raw/<source>/`, keeps an
+  `INDEX.md` there, and has one pass skill here that files from it.
+- `raw/` is **read-only** for Claude and exempt from the unique-filename rule.
+- `raw/captures/` arrives one way, by a send-only sync from the capture
+  machine (`setup-vault` §9). Nothing is ever written back.
+- `transfer-inbox` files captures after the user approves its candidate
+  table. What is done is recorded in `.claude/filed-captures.md`, append-only.
+  A decision is dated by its capture's `captured_at`, not the day it is filed.
 
 ## Never
 - Never create topic folders.
-- Never invent tags, `type` values or `status` values.
-- Never delete a page or a Decisions Log line.
+- Never delete a page, a log line or a ledger line.
+- Never edit anything under `raw/`.
 - Never touch `.obsidian/`.

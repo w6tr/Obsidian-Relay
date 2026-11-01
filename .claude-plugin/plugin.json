@@ -1,10 +1,10 @@
 {
   "name": "obsidian-relay",
   "displayName": "Obsidian Relay",
-  "version": "0.1.0",
-  "description": "Two-vault Obsidian workflow where Claude is the only writer: capture notes into a flat staging vault on any machine, then merge them into a main vault by rule. Ships both vault templates and the capture / transfer skills.",
+  "version": "0.2.0",
+  "description": "Capture on any machine, file in one Obsidian vault, with Claude as the only writer: a capture folder holds your words verbatim, a one-way sync carries it into the main vault's raw/ layer, and a pass skill files approved rows there. Ships both templates and the capture / transfer-inbox / setup-vault skills.",
   "author": { "name": "obsidian-relay contributors" },
   "repository": "https://github.com/w6tr/Obsidian-Relay",
   "license": "MIT",
-  "keywords": ["obsidian", "notes", "pkm", "vault", "inbox", "staging", "transfer"]
+  "keywords": ["obsidian", "notes", "pkm", "vault", "inbox", "capture", "syncthing"]
 }

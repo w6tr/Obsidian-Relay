@@ -1,7 +1,7 @@
 {
   "name": "obsidian-relay",
-  "version": "0.1.0",
-  "description": "Obsidian sidebar companion for the obsidian-relay two-vault workflow.",
+  "version": "0.2.0",
+  "description": "Obsidian sidebar companion for the obsidian-relay capture workflow.",
   "main": "main.js",
   "private": true,
   "scripts": {

@@ -1,9 +1,9 @@
 {
   "id": "obsidian-relay",
   "name": "Relay",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minAppVersion": "1.4.0",
-  "description": "Sidebar for a staging vault: shows Inbox notes waiting for transfer grouped by venture, validates their routing properties, and flips status (draft → ready → transferred) with one click. Companion to the obsidian-relay Claude Code plugin.",
+  "description": "Sidebar for a capture folder: lists captures newest first, validates their front matter, flips status between draft and ready with one click, and rebuilds INDEX.md. Companion to the obsidian-relay Claude Code plugin.",
   "author": "obsidian-relay contributors",
   "authorUrl": "https://github.com/w6tr/Obsidian-Relay",
   "isDesktopOnly": false

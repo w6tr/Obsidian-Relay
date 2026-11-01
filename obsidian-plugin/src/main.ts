@@ -1,5 +1,5 @@
-import { MarkdownView, Notice, Plugin, TAbstractFile, TFile, normalizePath } from "obsidian";
-import { markTransferred, readInbox, setStatus, updateHome } from "./notes";
+import { MarkdownView, Notice, Plugin, TAbstractFile, TFile } from "obsidian";
+import { isCapturePath, readCaptures, rebuildIndex, setStatus } from "./notes";
 import { DEFAULT_SETTINGS, RelaySettingTab, type RelaySettings } from "./settings";
 import { RelayView, VIEW_TYPE } from "./view";
 
@@ -12,62 +12,56 @@ export default class RelayPlugin extends Plugin {
 		this.addSettingTab(new RelaySettingTab(this.app, this));
 
 		this.registerView(VIEW_TYPE, (leaf) => new RelayView(leaf, this));
-		this.addRibbonIcon("send-horizontal", "Waiting for transfer", () => void this.activateView());
+		this.addRibbonIcon("inbox", "Captures", () => void this.activateView());
 
 		this.addCommand({
 			id: "open-view",
-			name: "Open waiting-for-transfer sidebar",
+			name: "Open captures sidebar",
 			callback: () => void this.activateView(),
 		});
 		this.addCommand({
 			id: "mark-ready",
-			name: "Mark current note ready",
-			checkCallback: (checking) => this.withCurrentInboxNote(checking, (f) => setStatus(this.app, f, "ready")),
+			name: "Mark current capture ready",
+			checkCallback: (checking) => this.withCurrentCapture(checking, (f) => setStatus(this.app, f, "ready")),
 		});
 		this.addCommand({
 			id: "mark-draft",
-			name: "Mark current note draft",
-			checkCallback: (checking) => this.withCurrentInboxNote(checking, (f) => setStatus(this.app, f, "draft")),
+			name: "Mark current capture draft",
+			checkCallback: (checking) => this.withCurrentCapture(checking, (f) => setStatus(this.app, f, "draft")),
 		});
 		this.addCommand({
-			id: "mark-transferred",
-			name: "Mark current note transferred (move to Transferred folder)",
-			checkCallback: (checking) =>
-				this.withCurrentInboxNote(checking, (f) => markTransferred(this.app, f, this.settings)),
-		});
-		this.addCommand({
-			id: "update-home",
-			name: "Regenerate waiting list in home note",
+			id: "rebuild-index",
+			name: "Rebuild INDEX.md",
 			callback: async () => {
-				const ok = await updateHome(this.app, this.settings);
-				new Notice(ok ? `Updated ${this.settings.homeFile}` : `${this.settings.homeFile} not found`);
+				const n = await rebuildIndex(this.app, this.settings);
+				new Notice(`Rebuilt ${this.settings.indexFile}: ${n} capture${n === 1 ? "" : "s"}`);
 			},
 		});
 		this.addCommand({
-			id: "validate-inbox",
-			name: "Validate Inbox note properties",
+			id: "validate",
+			name: "Validate captures",
 			callback: () => {
-				const notes = readInbox(this.app, this.settings);
+				const notes = readCaptures(this.app, this.settings);
 				const broken = notes.filter((n) => n.issues.length);
 				new Notice(
 					broken.length === 0
-						? `All ${notes.length} Inbox notes have valid properties.`
-						: `${broken.length} of ${notes.length} Inbox notes have issues — see the sidebar.`,
+						? `All ${notes.length} captures are valid.`
+						: `${broken.length} of ${notes.length} captures have issues — see the sidebar.`,
 				);
 				if (broken.length) void this.activateView();
 			},
 		});
 
-		// Keep the sidebar (and optionally Home.md) current when the Inbox changes.
+		// Keep the sidebar (and optionally the index) current when captures change.
 		const onFile = (file: TAbstractFile, oldPath?: string) => {
-			if (this.isInInbox(file.path) || (oldPath && this.isInInbox(oldPath))) this.scheduleRefresh();
+			if (this.isCapture(file.path) || (oldPath && this.isCapture(oldPath))) this.scheduleRefresh();
 		};
 		this.registerEvent(this.app.vault.on("create", onFile));
 		this.registerEvent(this.app.vault.on("delete", onFile));
 		this.registerEvent(this.app.vault.on("rename", onFile));
 		this.registerEvent(
 			this.app.metadataCache.on("changed", (file) => {
-				if (this.isInInbox(file.path)) this.scheduleRefresh();
+				if (this.isCapture(file.path)) this.scheduleRefresh();
 			}),
 		);
 	}
@@ -91,10 +85,10 @@ export default class RelayPlugin extends Plugin {
 		}
 	}
 
-	/** Called after a status change or move made by this plugin. */
-	async afterInboxChange(): Promise<void> {
+	/** After a status change made by this plugin the index always follows. */
+	async afterStatusChange(): Promise<void> {
+		await rebuildIndex(this.app, this.settings);
 		this.refreshView();
-		if (this.settings.autoUpdateHome) await updateHome(this.app, this.settings);
 	}
 
 	private scheduleRefresh(): void {
@@ -102,21 +96,21 @@ export default class RelayPlugin extends Plugin {
 		// Debounce: metadata changes arrive in bursts while a note is being edited.
 		this.refreshTimer = window.setTimeout(() => {
 			this.refreshTimer = null;
-			void this.afterInboxChange();
+			this.refreshView();
+			if (this.settings.autoRebuildIndex) void rebuildIndex(this.app, this.settings);
 		}, 300);
 	}
 
-	private isInInbox(path: string): boolean {
-		const inbox = normalizePath(this.settings.inboxFolder);
-		return path.startsWith(inbox + "/") && path.endsWith(".md");
+	private isCapture(path: string): boolean {
+		return isCapturePath(path, this.settings);
 	}
 
-	private withCurrentInboxNote(checking: boolean, action: (file: TFile) => Promise<void>): boolean {
+	private withCurrentCapture(checking: boolean, action: (file: TFile) => Promise<void>): boolean {
 		const file = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
-		if (!file || !this.isInInbox(file.path)) return false;
+		if (!file || !this.isCapture(file.path)) return false;
 		if (!checking) {
 			action(file)
-				.then(() => this.afterInboxChange())
+				.then(() => this.afterStatusChange())
 				.catch((e: unknown) => new Notice(e instanceof Error ? e.message : String(e)));
 		}
 		return true;

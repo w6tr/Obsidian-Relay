@@ -1,52 +1,96 @@
 ---
 name: capture
-description: Write a note into the staging vault's Inbox with the required routing properties (type, venture, target, status, created, device), using the vault's Capture Note template, and update the "Waiting for transfer" list on Home.md. Use whenever the user says "log this", "note that", "capture", "add to the vault", "record a decision", or dictates anything that should end up in their Obsidian vault while a staging vault is the working directory.
-argument-hint: "[what to log]"
+description: Write down what the user says, verbatim, as a capture note in a plain capture folder on the capture machine — status, time and device only, no type, no target, no rewording — and rebuild the folder's INDEX.md. The main vault decides what each capture is and where it goes, later, with the user watching. Use whenever the user says "log this", "note that", "capture", "jot this down", "remember this", or dictates anything meant for their Obsidian vault while a capture folder is the working directory.
+argument-hint: "[what to capture]"
 ---
 
 # capture
 
-Write the user's words into the staging vault as a correctly-routed Inbox note. The vault's own `CLAUDE.md` is authoritative on conventions; this skill is the procedure.
+Write the user's words into the capture folder exactly as said. This machine is
+the **raw layer**: it records, it never classifies. Deciding what a capture is
+(a decision, a lean, a next step) and which page it belongs on happens in the
+main vault, in a pass the user approves row by row. The folder's own
+`CLAUDE.md` is authoritative on conventions; this skill is the procedure.
 
-## 0. Confirm you are in a staging vault
-The working directory (or a connected folder) must contain `Inbox/`, `Home.md` and a `CLAUDE.md` describing a staging vault. If not, stop and tell the user — don't write into an unknown folder. If the folder is a *main* vault (has `Ventures/`, `Company/`), use the main vault's "update in place" rules instead of this skill.
+## 0. Confirm you are in a capture folder
+The working directory (or a connected folder) must contain a `CLAUDE.md` that
+describes a capture folder, and an `INDEX.md`. If not, stop and say so — never
+write into an unknown folder. If the folder is a **main vault** (has
+`Ventures/`, `Company/`), stop: captures are not written there; use that
+vault's own filing skill.
 
-## 1. Decide: new note or append?
-Read `Home.md` → "Waiting for transfer". If an Inbox note already exists for the **same venture and same day** with `status: draft`, append to it (new bullet under the right heading, or a new `## <topic>` section). Otherwise create a new note.
+## 1. New capture or append?
+Read `INDEX.md`. If the newest capture is `draft` and the user is clearly
+continuing the same thought ("also…", "and add…", "one more thing on that"),
+append to it. Otherwise create a new capture. When unsure, create a new one —
+two small captures are cheaper than one muddled one.
 
-## 2. Determine the properties
-Ask only for what you can't infer — usually nothing. Defaults:
+## 2. The file
+- **Name:** `<YYYY-MM-DD>_<HHMM>_<slug>.md` — local date, 24-hour time the
+  capture was started, then a 2–5 word lowercase hyphenated slug taken from
+  the user's own words (`2026-11-03_0915_supplier-call.md`). Unique by
+  construction. Flat in the folder; no sub-folders.
+- **Front matter** — exactly these keys, nothing else:
 
-| Property | How to fill |
+```yaml
+---
+status: draft
+captured_at: 2026-11-03T09:15
+device: <short machine name from CLAUDE.md>
+hint: <only if the user said where it goes>
+---
+```
+
+| Key | Rule |
 |---|---|
-| `type` | Pick from `decision`, `research`, `meeting`, `idea`, `log`. A choice the user made → `decision`. Findings/sources → `research`. A conversation → `meeting`. "What if…" → `idea`. Progress → `log`. |
-| `venture` | Lowercase hyphenated slug. **Reuse** a slug already present in `Home.md` or `Inbox/`. Only create a new slug if the user names a genuinely new venture; confirm the spelling with them once. |
-| `target` | The main-vault page this belongs in. Default `Ventures/<Venture Name>.md`. Decisions about the company itself → `Company/Decisions Log.md`. Something about a partner → `Partners/<Name>.md`. Leads → `Pipeline/Prospects.md`. If unknowable, leave `target` empty and say so — the transfer step will ask. |
-| `status` | `draft`, unless the user says it's done — then `ready`. |
-| `created` | Today, `YYYY-MM-DD`. |
-| `device` | The value already used by other notes in this vault (check one), else what the template says. |
+| `status` | `draft` on creation. `ready` only when the user says it is done ("that's it", "ready", "send it"). No other value, ever. |
+| `captured_at` | Local time the capture was started, `YYYY-MM-DDTHH:MM`. Never changed by an append. |
+| `device` | The short name in this folder's `CLAUDE.md`. |
+| `hint` | The user's own words on where it goes ("the LLC", "Example Venture"). **Omit the key** unless the user said one. Never your guess. |
 
-## 3. Write the note
-- Filename: `Inbox/YYYY-MM-DD <venture> - <topic>.md`. Topic: 2–5 words, lowercase, no punctuation other than spaces.
-- Body: copy `Templates/Capture Note.md`. Replace `{{date:YYYY-MM-DD}}` and `{{title}}` yourself (Obsidian's Templates plugin only expands them when a human inserts the template). Title = filename without `.md`.
-- Put the user's content under `## Notes`. Any decision also goes as one line under `## Decisions`. Any follow-up goes under `## Next steps`. Delete empty bullets, keep the headings.
-- Rewrite for clarity but keep the user's meaning, names and numbers exactly. Don't pad.
-- Links: `[[Name]]` only, never `[[Folder/Name]]`. Link main-vault pages by name even though they don't exist here.
-- Attachments the user gives you go into `Attachments/` unchanged and are embedded as `![[filename.ext]]`.
+- **Body:**
 
-## 4. Update Home.md
-Under "Waiting for transfer", keep one line per Inbox note, grouped by venture (`### <venture>`), newest first within each group. Remove the `- none yet` line when adding the first note; restore it when the list becomes empty.
+```markdown
+# <file name without .md>
+
+## Words
+<what the user said, verbatim>
+```
+
+  Verbatim means: the user's words, in order, with only obvious dictation
+  slips fixed (a doubled word, a stray "um"). No rewording for clarity, no
+  summary, no headings inside `## Words`, no bullets the user did not say, no
+  "Decision:" or "Next step:" labels. An append adds a blank line and the new
+  words at the end of `## Words`.
+
+## 3. Attachments
+A file the user hands over goes in `attachments/` (flat, its own name; if the
+name is taken, prefix the capture's date and time). Embed it in `## Words` as
+`![[name]]` where the user mentioned it.
+
+## 4. Rebuild INDEX.md
+After every create, append or status change, rewrite `INDEX.md` from the
+folder: one line per capture, newest first by `captured_at`:
 
 ```
-### example-venture
-- [[2026-10-15 example-venture - pricing research]] — research · draft
+- 2026-11-03_0915_supplier-call.md · ready · 2026-11-03T09:15
 ```
+
+The header paragraph above the list stays as it is. The index is rebuilt from
+the files, never edited by hand — if the Relay sidebar plugin is installed,
+its "Rebuild INDEX.md" command does the same thing deterministically.
 
 ## 5. Report
-One or two lines: the file created or appended to, its `status`, and its `target`. If `target` is empty, say that it needs one before transfer.
+One or two lines: the file, its status, and (when it is `draft`) that it will
+not be filed until it is marked `ready`.
 
 ## Don't
-- Don't create folders inside `Inbox/`.
-- Don't invent `type` values or tags.
-- Don't write into `Transferred/` or `.obsidian/`.
-- Don't flip a note to `ready` unless the user said the work is done or asked you to.
+- Don't classify: no `type`, `venture`, `target`, `tags`, "decision" or
+  "next step" anywhere in the capture.
+- Don't reword, summarise or tidy the user's words.
+- Don't edit a `ready` capture — the main vault may already have filed it.
+  A change or correction is a new capture, in the user's words.
+- Don't write anywhere outside this folder, and never into the main vault.
+  Captures reach it one way (a send-only sync); nothing comes back.
+- Don't delete a capture. If the user says one was a mistake, write that, in
+  their words, as a new capture.
