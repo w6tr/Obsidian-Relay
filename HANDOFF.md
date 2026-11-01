@@ -1,6 +1,6 @@
 # HANDOFF — obsidian-relay
 
-**Last updated:** 2026-11-01 · **Status:** v0.2.0 — capture-folder redesign written; not committed, plugin not built, full loop not yet run.
+**Last updated:** 2026-11-01 · **Status:** v0.2.0 — capture-folder redesign committed on branch `v0.2` (not pushed); plugin not built, full loop not yet run.
 **Purpose:** anyone (or any Claude session, on any machine) can clone this repo and continue. Read this, then `README.md`, then whatever section you're working on. Keep this file current — it is the shared memory between sessions; chat history does not travel.
 
 > This is the **public** handoff. It contains nothing personal: no real vault paths, venture names, partner names or people. Private operational notes (where the live vaults are, real slugs) stay in the owner's own vault, never here.
@@ -28,7 +28,7 @@ Shipped as:
 | Obsidian plugin | `obsidian-plugin/` | **Source rewritten for v0.2**: flat list newest first, 3+1 key validation, Mark ready / Back to draft, Rebuild INDEX.md, Validate, `autoRebuildIndex` setting. **Not built and never loaded** — `node_modules` is absent on the machine that wrote it, so `npm run build` has not run against this source. `main.js` is git-ignored. |
 | README | `README.md` | Rewritten for v0.2. Needs a screenshot once a capture folder exists. |
 | Design doc | `docs/design.md` | Rewritten for v0.2. The pipe is answered: Syncthing, one way. |
-| GitHub repo | https://github.com/w6tr/Obsidian-Relay | Holds v0.1. **v0.2 is in the working tree only — not committed.** |
+| GitHub repo | https://github.com/w6tr/Obsidian-Relay | `main` holds v0.1. **v0.2 is committed on local branch `v0.2` — not pushed, not merged.** |
 
 ## 3. Continuing on a new machine
 
